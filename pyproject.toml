@@ -1,0 +1,38 @@
+[project]
+name = "coorsfit"
+version = "0.1.0"
+description = "Forecast which hitters gain or lose at Coors Field from their non-Coors history."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "lightgbm==4.7.0",
+    "matplotlib==3.11.2",
+    "numpy==2.5.4",
+    "pandas==3.0.6",
+    "pyarrow==26.0.0",
+    "pybaseball==2.2.7",
+    "pyyaml==6.0.3",
+    "requests==2.34.2",
+    "scikit-learn==1.9.1",
+    "scipy==1.18.1",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.9,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+    "ruff==0.17.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

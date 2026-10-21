@@ -1,0 +1,50 @@
+# Coors Fit configuration. Every stage reads its settings from here.
+# The reasoning behind each choice is logged in DECISIONS.md.
+
+seed: 20261021
+
+paths:
+  raw: data/raw
+  interim: data/interim
+  processed: data/processed
+  figures: reports/figures
+
+seasons:
+  pull: [2015, 2026]        # inclusive range of regular seasons pulled from Statcast
+  targets: [2016, 2026]     # seasons whose Coors PAs are predicted; 2015 only feeds traits
+  shortened: [2020]         # 60-game season, dropped in a robustness check
+
+ingest:
+  chunk_days: 1             # one Savant request per day, so no response hits the row limit
+  max_retries: 6
+  backoff_base_seconds: 2
+  backoff_max_seconds: 60
+
+coors:
+  team: COL
+  venue_id: 19              # Coors Field in the MLB Stats API; COL was also "home" in Mexico City in 2024
+  primary_sample: visiting  # headline result and the five confirmatory tests
+  secondary_sample: rockies # Rockies hitters at home: pre-registered secondary analysis
+
+outcome:
+  value: woba_value
+  denom: woba_denom         # PAs with denom 1 count; sac bunts, IBB and truncated PAs do not
+
+traits:
+  window_seasons: 2         # pool non-Coors PAs from the two seasons before the target season
+  min_prior_noncoors_pa: 200
+  sensitivity_min_prior_noncoors_pa: 400
+  pitch_groups:             # Savant pitch_type codes
+    fastball: [FF, SI, FC]
+    breaking: [SL, ST, SV, CU, KC, CS]
+
+target:
+  min_same_season_noncoors_pa: 100
+  min_coors_pa_display: 10  # per-hitter displays only; the model and scoring use every Coors PA
+
+validation:
+  grouped_cv_folds: 5
+  rolling_origin_first_test: 2021  # expanding window: train on target seasons before Y, test on Y
+  bootstrap_reps: 2000
+  bootstrap_unit: batter
+  alpha: 0.05
