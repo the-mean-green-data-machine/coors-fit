@@ -4,7 +4,7 @@ Given only a hitter's non-Coors history, can we forecast how much more or less t
 
 This is a forecast scored on hitters the model never saw, not a leaderboard of who has hit well at Coors. The hypotheses and analysis plan were committed in [docs/hypotheses.md](docs/hypotheses.md) before any model was fit. A null result is a valid outcome.
 
-**Status:** Phase 0 of 7 (setup). There are no results yet.
+**Status:** Phase 1 of 7 done (ingest and clean). There are no model results yet. The data built so far is summarized in [reports/tables/data_summary.md](reports/tables/data_summary.md).
 
 ## Rerun
 
@@ -31,5 +31,5 @@ Without uv: `python3.12 -m venv .venv && .venv/bin/pip install -r requirements.t
 
 ## Not done yet
 
-- Phases 1 to 7: ingest, targets, gate, prediction, mechanism checks, robustness and write-up.
+- Phases 2 to 7: targets, gate, prediction, mechanism checks, robustness and write-up.
 - Weather controls (DECISIONS.md, D-12).

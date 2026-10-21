@@ -16,6 +16,7 @@ seasons:
 
 ingest:
   chunk_days: 1             # one Savant request per day, so no response hits the row limit
+  workers: 4                # concurrent day requests; an uncached day takes Savant about 5 s
   max_retries: 6
   backoff_base_seconds: 2
   backoff_max_seconds: 60

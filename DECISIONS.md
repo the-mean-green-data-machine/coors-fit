@@ -16,7 +16,7 @@ A running log of choices and the reasons for them, newest phase last. Numbers qu
 ### D-03 · Ingest: serial, one day per request, cached, retried
 - **Decision:** pull one day per request, one request at a time. Each day is cached to parquet, failures are retried with exponential backoff (6 tries, 2 to 60 seconds), and a rerun skips days already cached.
 - **Why:**
-  - Pulling serially is fast enough: the full 2025 season (712,528 pitches) took 50 seconds.
+  - Pulling serially is fast enough: the full 2025 season (712,528 pitches) took 50 seconds. *Corrected in D-14: those days were mostly cached by Savant's CDN; an uncached day takes about 5 seconds, so the pull now runs 4 requests at a time.*
   - pybaseball's default parallel, uncached pull died partway through a season on a transient network drop. The same drop also hit google.com, so it was not Savant blocking us.
   - A two-week 2015 pull hit two drops and recovered through retries.
 
@@ -90,3 +90,38 @@ Changed before pre-registration:
 
 ### D-13 · Seeds
 - **Decision:** one seed (`config.yaml: seed`). Each random step takes its own NumPy generator seeded with `[seed, stream]` (`coorsfit.config.rng`), so adding a step does not shift the random numbers of the others. `set_global_seeds()` covers libraries that read global state.
+
+## Phase 1: ingest and clean (2026-10-21)
+
+### D-14 · Pull four days at a time
+- **Decision:** ingest sends 4 day requests at once (`ingest.workers`), each with the D-03 retries.
+- **Why:** the 50-second 2025 timing in D-03 came mostly from cached responses. An uncached day takes Savant about 5 seconds, so a serial pull would take about 3 hours. With 4 workers the full 2015–2026 pull took about 34 minutes. Retries absorbed 145 network drops, and no day failed. 2024–2026 came back in about 12 seconds per season, presumably from Savant's cache; the schedule check (D-15) and the sanity tests confirm those days are complete.
+
+### D-15 · Pull the dates of played games, and check each day against the schedule
+- **Decision:** ingest pulls exactly the dates of played regular-season games from the MLB Stats API schedule (`codedGameState == 'F'`) rather than a calendar range. A day whose response holds none of its scheduled games is retried instead of being cached as empty.
+- **Why:** a transient failure can return an empty frame, which would otherwise be cached as a day without games. The result: all 27,622 played games from 2015 to 2026 are in Statcast, and no Statcast game is missing from the schedule.
+
+### D-16 · Compute the wOBA denominator from the event
+- **Decision:** `woba_denom` is 0 for `sac_bunt`, `sac_bunt_double_play`, `intent_walk` and `truncated_pa`, and 1 otherwise. Savant's column is kept as `woba_denom_savant`.
+- **Why:**
+  - Savant leaves `woba_denom` blank on ordinary PAs: 3.0% in 2015, falling to 0.5–0.6% from 2021. `woba_value` is present on all of them.
+  - The rule matches Savant on every PA where Savant fills it, in every season.
+  - Savant counts catcher's interference (denominator 1, value 0.7), unlike the textbook formula. The rule follows Savant, because `woba_value` comes from Savant.
+  - PAs with a blank Savant denominator have the same mean `woba_value` per event as other PAs, within 0.01.
+
+### D-17 · Cleaning rules
+- **Duplicates:** pitches are keyed on `game_pk`, `at_bat_number` and `pitch_number`. No season had a duplicate pitch, but the deduplication stays as a guard.
+- **PAs:** a PA is the pitch row that carries an event. If a PA had two event rows, the later pitch would be kept.
+- **Types:** columns are cast through nullable types, because raw days disagree on dtype. A missing ID or count raises an error rather than being dropped.
+- **Expected wOBA:** `xwoba_bip` keeps Savant's expected wOBA only on batted balls.
+- **Venue:** comes from the schedule. Every pitch matched a played game.
+
+### D-18 · Storage
+- **Raw (1.3 GB):** `data/raw/statcast/{season}/{date}.parquet`, plus `schedule/` and `sprint_speed/` for each season.
+- **Interim (238 MB):** `data/interim/pitches_{season}.parquet`.
+- **Processed (80 MB):** `data/processed/pa.parquet`, with 2,092,114 PAs.
+- **What's committed:** none of the data. `reports/tables/data_summary.md` is committed, so readers can see the counts without rebuilding.
+
+### Observations from the data summary (no decision)
+- Visitors' wOBA at Coors exceeded visitors' road wOBA at other parks by between .017 (2021) and .075 (2025). A swing that large between seasons fits changes in Rockies pitching quality, which is why the Phase 2 expectation controls for the pitchers faced.
+- Visitors had 33,415 Coors wOBA PAs in the 2016–2026 target seasons, close to the 35,000 planning figure in `docs/hypotheses.md`. That count is before the eligibility thresholds.

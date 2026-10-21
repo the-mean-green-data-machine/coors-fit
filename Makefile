@@ -28,7 +28,8 @@ openmp:
 	@$(RUN) python -c "import lightgbm; print('lightgbm', lightgbm.__version__, 'loads')"
 
 data:  ## Phase 1: pull Statcast (cached, resumable) and build the PA table
-	@echo "data: not implemented yet (Phase 1)"; exit 1
+	$(RUN) python -m coorsfit.ingest
+	$(RUN) python -m coorsfit.clean
 
 features:  ## Phase 4: non-Coors traits from prior seasons
 	@echo "features: not implemented yet (Phase 4)"; exit 1
