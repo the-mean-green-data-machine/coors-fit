@@ -4,7 +4,7 @@ Given only a hitter's non-Coors history, can we forecast how much more or less t
 
 This is a forecast scored on hitters the model never saw, not a leaderboard of who has hit well at Coors. The hypotheses and analysis plan were committed in [docs/hypotheses.md](docs/hypotheses.md) before any model was fit. A null result is a valid outcome.
 
-**Status:** Phases 0 to 2 of 7 are done (setup, data and targets). There are no model results yet. See the [data summary](reports/tables/data_summary.md) and the [target diagnostics](reports/tables/targets_diagnostics.md).
+**Status:** Phases 0 to 3 of 7 are done (setup, data, targets and the gate). The gate found no stable Coors skill among visiting hitters: their true Coors effects differ by an SD of less than 27 wOBA points (upper 95% bound), and the point estimate is zero. See the [gate](reports/tables/gate.md), the [data summary](reports/tables/data_summary.md) and the [target diagnostics](reports/tables/targets_diagnostics.md). There are no prediction results yet.
 
 ## Rerun
 
@@ -31,5 +31,5 @@ Without uv: `python3.12 -m venv .venv && .venv/bin/pip install -r requirements.t
 
 ## Not done yet
 
-- Phases 3 to 7: gate, prediction, mechanism checks, robustness and write-up.
+- Phases 4 to 7: prediction, mechanism checks, robustness and write-up.
 - Weather controls (DECISIONS.md, D-12).

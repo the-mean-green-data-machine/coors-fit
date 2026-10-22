@@ -5,21 +5,32 @@ from __future__ import annotations
 import numpy as np
 
 
-def tau2_anova(sums: np.ndarray, counts: np.ndarray, sigma2: float) -> float:
+def tau2_anova(
+    sums: np.ndarray,
+    counts: np.ndarray,
+    sigma2: float,
+    extra_var: np.ndarray | None = None,
+    clip: bool = True,
+) -> float:
     """Between-group variance by method of moments (one-way ANOVA, unbalanced groups).
 
     `sums` and `counts` are each group's total and number of observations; `sigma2` is the
-    variance of one observation within a group. Returns 0 when the spread between group means
-    is no more than sampling noise would produce.
+    variance of one observation within a group. `extra_var` is any further known variance of
+    each group's mean that is not true difference, such as error in the expectation the
+    residuals are measured from. With `clip`, returns 0 when the spread between group means is
+    no more than that noise would produce; without it, the raw (possibly negative) estimate.
     """
     n = np.asarray(counts, dtype=float)
     s = np.asarray(sums, dtype=float)
+    v = np.zeros_like(n) if extra_var is None else np.asarray(extra_var, dtype=float)
     keep = n > 0
-    n, s = n[keep], s[keep]
+    n, s, v = n[keep], s[keep], v[keep]
     total = n.sum()
     grand = s.sum() / total
     between = np.sum(n * (s / n - grand) ** 2)
-    return max(0.0, (between - sigma2 * (len(n) - 1)) / (total - np.sum(n**2) / total))
+    noise = np.sum((1 - n / total) * (sigma2 + n * v))
+    estimate = float((between - noise) / (total - np.sum(n**2) / total))
+    return max(0.0, estimate) if clip else estimate
 
 
 def design_effect(
@@ -45,12 +56,22 @@ def design_effect(
     return max(1.0, float(spread / expected))
 
 
-def shrink(sums: np.ndarray, counts: np.ndarray, sigma2: float, tau2: float) -> np.ndarray:
-    """Posterior mean of each group's effect under a Normal(0, tau2) prior."""
+def shrink(
+    sums: np.ndarray,
+    counts: np.ndarray,
+    sigma2: float,
+    tau2: float,
+    extra_var: np.ndarray | float = 0.0,
+) -> np.ndarray:
+    """Posterior mean of each group's effect under a Normal(0, tau2) prior.
+
+    A group's observed mean has variance sigma2 / n plus `extra_var` around its true effect.
+    """
     sums = np.asarray(sums, dtype=float)
     if tau2 <= 0:
         return np.zeros_like(sums)
-    return sums / (np.asarray(counts, dtype=float) + sigma2 / tau2)
+    n = np.asarray(counts, dtype=float)
+    return (sums / n) * tau2 / (tau2 + extra_var + sigma2 / n)
 
 
 def cluster_slope(x: np.ndarray, y: np.ndarray, clusters: np.ndarray) -> tuple[float, float]:

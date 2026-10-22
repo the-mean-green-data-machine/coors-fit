@@ -145,6 +145,8 @@ def to_markdown(df: pd.DataFrame) -> str:
             return str(v)
         if isinstance(v, int | np.integer):
             return f"{v:,}"
+        if col.startswith("tau2"):
+            return f"{v:+.6f}"  # variances in wOBA squared are tiny
         return f"{v:.1f}" if col.endswith("pct") else f"{v:.3f}"
 
     header = "| " + " | ".join(df.columns) + " |"

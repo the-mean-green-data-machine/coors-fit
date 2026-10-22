@@ -177,3 +177,27 @@ Changed before pre-registration:
   - The pre-registered B0 and the uncontrolled fits are reported as sensitivities.
 - **Why:** the gradient could otherwise be credited to traits that track hitter quality. Putting the same slope in the baseline means any lift comes from the traits alone.
 - **Committed** on its own, before any Phase 3 or Phase 4 code.
+
+## Phase 3: the gate (2026-10-21)
+
+### D-25 · The gate's noise term (amendment A-4)
+- **Decision:** for each hitter, the noise subtracted from his pooled mean residual has three parts:
+  - his own per-PA variance divided by his Coors PAs,
+  - multiplied by the game design effect,
+  - plus the variance of his expectation error, combined across seasons.
+  Phase 2's hitter-season shrinkage also removes the expectation error. It keeps a pooled per-PA variance there, because it only feeds displays.
+- **Why:**
+  - The batter-effect estimate's error has an SD of 0.019 for visitors and 0.022 for Rockies hitters. It is shared within a season, about as large as the effect being tested, and would otherwise count as skill. Removing it cut Rockies hitters' hitter-season τ from 0.027 to 0.016.
+  - Per-PA variance rises with Coors PAs: the correlation is 0.12 for visitors and 0.52 for Rockies hitters. A pooled variance overstated the noise; at the hitter-season level, visitors' τ² moved from −0.0025 to −0.0015 with each hitter's own variance.
+- **Tests:** the estimator recovers a known spread (τ = 0.04). It does not pass on pure noise. Ignoring expectation error inflates τ².
+
+### D-26 · Gate result: no stable Coors skill detected
+- **Visitors (primary):** 708 hitters, 25,275 Coors PAs, median 23 per hitter.
+  - τ² = −0.00013, with a 95% interval of −0.00095 to +0.00070.
+  - Hitters' true Coors effects differ by an SD of less than 27 wOBA points (upper bound); the point estimate is 0.
+  - Net of the hitter-quality slope (−0.180 ± 0.162 at the hitter-season level), the result is the same.
+- **Odd vs even seasons:** r = −0.02 (−0.25 to +0.22) for the 77 visitors with at least 30 Coors PAs in each half.
+- **Rockies hitters:** 45 hitters with a median of 248 Coors PAs each. τ = 19 wOBA points, but the τ² interval (−0.00009 to +0.00081) includes zero.
+- **What it means for Phase 4:**
+  - A perfect forecast of each hitter's true effect could cut the per-PA squared error by at most τ², which is at most 0.0007, about 0.2% of the per-PA variance of 0.30.
+  - The data cannot rule out an SD of up to 27 points, so trait effects remain testable. Phase 4 runs as pre-registered.

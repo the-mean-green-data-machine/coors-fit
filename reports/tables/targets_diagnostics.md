@@ -72,12 +72,12 @@ Residual net of the season's Coors effect, by quintile of expected wOBA at Coors
 
 ## Shrinkage (hitter-season level)
 
-Share of visitor hitter-seasons inside the 95% noise-only band: 0.962.
+Share of visitor hitter-seasons inside the 95% noise-only band: 0.963.
 
-| group | hitter_seasons | coors_pas | pooled_effect | sigma | tau_hitter_season | median_coors_pas | median_shrink_factor | sd_dev_raw | sd_dev_shrunk |
-|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| visitor | 1,877 | 25,275 | 0.041 | 0.544 | 0.000 | 12.000 | 0.000 | 0.142 | 0.000 |
-| rockies | 89 | 19,527 | 0.056 | 0.549 | 0.027 | 236.000 | 0.361 | 0.045 | 0.015 |
+| group | hitter_seasons | coors_pas | pooled_effect | sigma | design_effect | sd_expectation_error | tau2_unclipped | tau_hitter_season | median_coors_pas | median_shrink_factor | sd_dev_raw | sd_dev_shrunk |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| visitor | 1,877 | 25,275 | 0.041 | 0.546 | 1.017 | 0.019 | -0.002822 | 0.000 | 12.000 | 0.000 | 0.142 | 0.000 |
+| rockies | 89 | 19,527 | 0.056 | 0.548 | 1.001 | 0.022 | +0.000241 | 0.016 | 236.000 | 0.120 | 0.045 | 0.005 |
 
 ## Power from eligible visitor Coors PAs
 

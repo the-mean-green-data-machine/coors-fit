@@ -65,3 +65,10 @@ def test_shrinkage_only_pulls_toward_the_season_effect(targets):
     assert e["dev_shrunk"].notna().all()
     assert targets.loc[~targets["eligible"], "dev_shrunk"].isna().all()
     assert (e["dev_shrunk"].abs() <= e["dev"].abs() + 1e-12).all()
+
+
+def test_quality_control_is_centered_within_each_group_and_season(targets):
+    # Amendment A-3: quality is the hitter-season's expected wOBA minus its group-season mean.
+    e = targets[targets["eligible"]]
+    weighted = (e["quality"] * e["n_coors"]).groupby([e["group"], e["season"]]).sum()
+    assert (weighted.abs() < 1e-8).all()

@@ -137,3 +137,17 @@ Logged after Phase 2 found that visitors' Coors residuals slope against their ex
   - The pre-registered B0 (league-average effect only) is reported as well, which shows how much the quality slope adds on its own.
 - **Sensitivity:** the uncontrolled versions (the confirmatory fit and M1 without `quality`, scored against B0) are reported as a sensitivity analysis.
 - **Gate:** unchanged. τ is estimated as registered; τ net of the quality slope is reported alongside it as supplementary.
+
+### A-4 · 2026-10-21 · Two refinements to the gate's noise term
+
+These were adopted while building Phase 3. The statistic (τ), the decision rule (lower bound above zero) and the interval (bootstrap over hitters) are as registered. Only the noise subtracted in the method of moments changes.
+
+- **Remove the expectation's own error.**
+  - A hitter's residuals are measured against his estimated batter level. That estimate's error (posterior SD about 0.019 for visitors) is shared by all his Coors PAs that season, so it would otherwise count as skill.
+  - Its variance, which is independent across seasons, is subtracted.
+  - This was designed before the gate was run, and it can only lower τ.
+- **Use each hitter's own per-PA variance.** Hitters with more Coors PAs tend to have more volatile outcomes, so a single pooled variance overstates the noise.
+  - This was adopted after Phase 2's hitter-season estimate for visitors came out implausibly negative (τ² = −0.0028), and before the hitter-level gate was run.
+  - It raises τ, so it works against a null.
+
+Evidence: DECISIONS.md, D-25. Unit tests check that the estimator recovers a known spread and stays near zero on pure noise.

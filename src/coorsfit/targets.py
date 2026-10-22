@@ -20,7 +20,7 @@ import pandas as pd
 
 from coorsfit.config import data_path, load_config
 from coorsfit.expectation import fit_expectation, flag_pitchers_batting, heldout_calibration
-from coorsfit.shrinkage import shrink, tau2_anova
+from coorsfit.shrinkage import design_effect, shrink, tau2_anova
 
 log = logging.getLogger(__name__)
 
@@ -34,6 +34,9 @@ def coors_residuals(pa: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
         model = fit_expectation(season_pa)
         at_coors = season_pa[season_pa["is_coors"] & season_pa["is_woba_pa"]].copy()
         at_coors["expected"] = model.predict(at_coors)
+        # The batter-effect estimate's own error is shared by all his Coors PAs that season,
+        # so it would look like Coors skill; its variance is removed when estimating tau.
+        at_coors["batter_post_var"] = model.posterior_var("batter", at_coors["batter"])
         coors.append(at_coors)
         fits.append(
             {
@@ -53,7 +56,7 @@ def coors_residuals(pa: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     out["group"] = np.where(out["home_player"], "rockies", "visitor")
     out["resid"] = out["woba_value"] - out["expected"]
     keep = ["game_pk", "at_bat_number", "season", "batter", "pitcher", "group",
-            "woba_value", "expected", "resid"]  # fmt: skip
+            "woba_value", "expected", "batter_post_var", "resid"]  # fmt: skip
     return out[keep], pd.DataFrame(fits)
 
 
@@ -83,6 +86,7 @@ def build_targets(coors_pa: pd.DataFrame, counts: pd.DataFrame) -> pd.DataFrame:
             sum_resid=("resid", "sum"),
             mean_actual=("woba_value", "mean"),
             mean_expected=("expected", "mean"),
+            batter_post_var=("batter_post_var", "mean"),
         )
         .reset_index()
     )
@@ -97,40 +101,67 @@ def build_targets(coors_pa: pd.DataFrame, counts: pd.DataFrame) -> pd.DataFrame:
     return t
 
 
+def within_noise(dev: np.ndarray, units: np.ndarray, games: np.ndarray) -> tuple[float, float]:
+    """Per-PA variance within units (hitter-seasons or hitters) and its game design effect.
+
+    A hitter's PAs in one Coors game share that day's weather and pitchers, so the noise in his
+    mean is the within-unit variance times the design effect.
+    """
+    codes = pd.factorize(units)[0]
+    n = np.bincount(codes)
+    within = dev - (np.bincount(codes, weights=dev) / n)[codes]
+    sigma2 = float(np.sum(within**2) / (len(dev) - len(n)))
+    return sigma2, design_effect(dev, codes, pd.factorize(games)[0], sigma2)
+
+
 def shrink_targets(t: pd.DataFrame, coors_pa: pd.DataFrame) -> tuple[pd.DataFrame, list[dict]]:
     """Shrink each eligible hitter-season's deviation from its season's Coors effect.
 
     Deviations are taken from the group's Coors effect in the same season, so season-to-season
     swings (such as the Rockies staff getting better or worse) are not counted as hitter skill.
+    Also adds `quality` (amendment A-3): the hitter-season's mean expected wOBA at Coors,
+    centered on the PA-weighted mean of its group and season.
     """
     t = t.copy()
-    t[["season_effect", "dev", "shrink_factor", "dev_shrunk"]] = np.nan
+    cols = ["season_effect", "dev", "quality", "shrink_factor", "dev_shrunk"]
+    t[cols] = np.nan
     diagnostics = []
     for group in ("visitor", "rockies"):
         rows = t["eligible"] & (t["group"] == group)
         e = t[rows]
-        season_effect = (
-            e.groupby("season")["sum_resid"].sum() / e.groupby("season")["n_coors"].sum()
-        )
+        n = e["n_coors"]
+        season_effect = e.groupby("season")["sum_resid"].sum() / n.groupby(e["season"]).sum()
+        season_expected = (e["mean_expected"] * n).groupby(e["season"]).sum() / n.groupby(
+            e["season"]
+        ).sum()
         effect = e["season"].map(season_effect)
-        dev_sum = e["sum_resid"] - e["n_coors"] * effect
+        dev_sum = e["sum_resid"] - n * effect
         pas = coors_pa.merge(e[TARGET_KEY], on=TARGET_KEY)
-        sigma2 = float((pas["resid"] - pas["season"].map(season_effect)).var())
-        tau2 = tau2_anova(dev_sum.to_numpy(), e["n_coors"].to_numpy(), sigma2)
-        k = sigma2 / tau2 if tau2 > 0 else np.inf
-        t.loc[rows, "season_effect"] = effect
-        t.loc[rows, "dev"] = dev_sum / e["n_coors"]
-        t.loc[rows, "shrink_factor"] = e["n_coors"] / (e["n_coors"] + k)
-        t.loc[rows, "dev_shrunk"] = shrink(
-            dev_sum.to_numpy(), e["n_coors"].to_numpy(), sigma2, tau2
+        sigma2, deff = within_noise(
+            (pas["resid"] - pas["season"].map(season_effect)).to_numpy(),
+            (pas["batter"] * 10_000 + pas["season"]).to_numpy(),
+            pas["game_pk"].to_numpy(),
         )
+        noise = sigma2 * deff
+        extra = e["batter_post_var"].to_numpy()
+        tau2 = tau2_anova(dev_sum.to_numpy(), n.to_numpy(), noise, extra_var=extra)
+        t.loc[rows, "season_effect"] = effect
+        t.loc[rows, "dev"] = dev_sum / n
+        t.loc[rows, "quality"] = e["mean_expected"] - e["season"].map(season_expected)
+        t.loc[rows, "shrink_factor"] = tau2 / (tau2 + extra + noise / n) if tau2 > 0 else 0.0
+        t.loc[rows, "dev_shrunk"] = shrink(dev_sum.to_numpy(), n.to_numpy(), noise, tau2, extra)
         diagnostics.append(
             {
                 "group": group,
                 "hitter_seasons": int(rows.sum()),
-                "coors_pas": int(e["n_coors"].sum()),
-                "pooled_effect": float(e["sum_resid"].sum() / e["n_coors"].sum()),
+                "coors_pas": int(n.sum()),
+                "pooled_effect": float(e["sum_resid"].sum() / n.sum()),
                 "sigma": sigma2**0.5,
+                "design_effect": deff,
+                "sd_expectation_error": float(np.sqrt(np.average(extra, weights=n))),
+                "tau2_unclipped": tau2_anova(
+                    dev_sum.to_numpy(), n.to_numpy(), noise, extra_var=extra, clip=False
+                ),
                 "tau_hitter_season": tau2**0.5,
                 "median_coors_pas": float(e["n_coors"].median()),
                 "median_shrink_factor": float(t.loc[rows, "shrink_factor"].median()),

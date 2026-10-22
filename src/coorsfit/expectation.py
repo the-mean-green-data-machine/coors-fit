@@ -52,8 +52,19 @@ class Expectation:
     sigma2: float
     tau2: dict[str, float] = field(default_factory=dict)
     design_effect: dict[str, float] = field(default_factory=dict)
+    counts: dict[str, pd.Series] = field(default_factory=dict)
     n_fit: int = 0
     iterations: int = 0
+
+    def posterior_var(self, name: str, key: pd.Series) -> np.ndarray:
+        """Posterior variance of a shrunk effect: how far the estimate may sit from the truth.
+
+        A level never seen in the fit keeps the prior variance tau2.
+        """
+        noise = self.sigma2 * self.design_effect[name]
+        n = key.map(self.counts[name]).fillna(0).to_numpy(dtype=float)
+        tau2 = self.tau2[name]
+        return np.where(tau2 > 0, 1 / (n / noise + 1 / max(tau2, 1e-12)), 0.0)
 
     def predict(self, pa: pd.DataFrame) -> np.ndarray:
         out = np.full(len(pa), self.mu)
@@ -108,7 +119,10 @@ def fit_expectation(pa: pd.DataFrame) -> Expectation:
             break
 
     effects = {name: pd.Series(eff[name], index=levels[name]) for name in TERMS}
-    return Expectation(mu, effects, sigma2, tau2, deff, n_fit=len(y), iterations=iterations)
+    n_per_level = {name: pd.Series(counts[name], index=levels[name]) for name in TERMS}
+    return Expectation(
+        mu, effects, sigma2, tau2, deff, n_per_level, n_fit=len(y), iterations=iterations
+    )
 
 
 def heldout_calibration(season_pa: pd.DataFrame) -> dict:
