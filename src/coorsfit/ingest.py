@@ -24,6 +24,7 @@ from coorsfit.config import data_path, load_config
 log = logging.getLogger(__name__)
 
 SCHEDULE_URL = "https://statsapi.mlb.com/api/v1/schedule"
+PEOPLE_URL = "https://statsapi.mlb.com/api/v1/people"
 PLAYED_STATE = "F"  # codedGameState for Final and Completed Early; D postponed, C cancelled
 
 
@@ -116,6 +117,29 @@ def fetch_sprint_speed(season: int) -> None:
         write_parquet(
             with_retries(lambda: statcast_sprint_speed(season, 1), f"sprint speed {season}"), path
         )
+
+
+def fetch_names(ids: list[int]) -> pd.Series:
+    """Player names by MLBAM id from the MLB Stats API, cached; only missing ids are fetched."""
+    path = data_path("raw") / "people.parquet"
+    cached = pd.read_parquet(path) if path.exists() else pd.DataFrame(columns=["id", "name"])
+    missing = sorted(set(ids) - set(cached["id"]))
+    for start in range(0, len(missing), 100):
+        batch = ",".join(str(i) for i in missing[start : start + 100])
+
+        def get(batch: str = batch) -> list[dict]:
+            r = requests.get(PEOPLE_URL, params={"personIds": batch}, timeout=60)
+            r.raise_for_status()
+            return r.json()["people"]
+
+        people = with_retries(get, "people")
+        found = pd.DataFrame(
+            {"id": [p["id"] for p in people], "name": [p["fullName"] for p in people]}
+        )
+        cached = pd.concat([cached, found], ignore_index=True)
+    if missing:
+        write_parquet(cached.astype({"id": "int64"}), path)
+    return cached.set_index("id")["name"]
 
 
 def main() -> None:

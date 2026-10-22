@@ -171,6 +171,9 @@ def main() -> None:
     )  # fmt: skip
     split = split_half(visitors)
     rows.to_parquet(data_path("processed") / "gate.parquet", index=False)
+    pd.DataFrame([{k: v for k, v in split.items() if k not in ("odd", "even")}]).to_parquet(
+        data_path("processed") / "gate_split.parquet", index=False
+    )
 
     fig = figure(rows, split)
     fig.savefig(ROOT / "reports" / "figures" / "phase3_gate.png", dpi=160, facecolor=SURFACE)

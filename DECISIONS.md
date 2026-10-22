@@ -334,3 +334,15 @@ Full tables are in `reports/tables/phase6_robustness.md`.
 - **H1's reversed sign is stable,** at −9.3 to −9.9 and surviving Holm in every variant. Phase 5 found it does not run through breaking balls.
 - **H3b's size is stable (+11.6 to +14.9), but its significance is fragile.** It fails Holm without 2020, which fits the Phase 5 "likely noise" flag.
 - **No conclusion changes.**
+
+## Phase 7: write-up (2026-10-21)
+
+### D-35 · The memo and README results are generated, and their claims are checked
+- **Decision:** `coorsfit.report` writes `reports/memo.md` and the README block between the `results` markers, using only results the pipeline saves. Phases 3 to 6 now also save their results as parquet for this purpose.
+  - Statements the memo makes in words are asserted against the data before anything is written: intervals that include zero, H3b's verdict, H1's fastball pattern, and so on. If a rerun changes a result, `make report` fails instead of publishing stale wording.
+  - The memo's prose template is exempt from the line-length lint rule.
+- **The illustrative appendix:**
+  - **Model:** M1 is fit on all 2016–2026 visitor hitter-seasons. Its trait coefficients are applied to 2027 traits built from 2025–2026 non-Coors data, for hitters with at least 200 such PAs. There is no same-season requirement, since 2027 hasn't been played.
+  - **What is shown:** trait effects only. Quality is held at average, because it needs same-season data.
+  - **Names:** from the MLB Stats API, cached in `data/raw/people.parquet`.
+  - **Labeling:** it is labeled illustrative, and its spread is set against the gate's estimates.

@@ -268,8 +268,15 @@ def main() -> None:
             for m in ("B0", "B0q", "M1", "M2")
         ]
     )
-    write_report(visitors, preds, lifts, cover, confirmatory(visitors),
-                 transfer(visitors, rockies), pd.DataFrame(fits))  # fmt: skip
+    conf, tr = confirmatory(visitors), transfer(visitors, rockies)
+    P = data_path("processed")  # saved so the memo and README can quote them (Phase 7)
+    lifts.to_parquet(P / "phase4_lifts.parquet", index=False)
+    cover.to_parquet(P / "phase4_coverage.parquet", index=False)
+    pd.DataFrame([tr]).to_parquet(P / "phase4_transfer.parquet", index=False)
+    pd.concat(d.assign(spec=name) for name, d in conf.items()).to_parquet(
+        P / "phase4_confirmatory.parquet", index=False
+    )
+    write_report(visitors, preds, lifts, cover, conf, tr, pd.DataFrame(fits))
 
 
 if __name__ == "__main__":

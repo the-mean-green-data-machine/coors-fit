@@ -52,8 +52,8 @@ robustness: models  ## Phase 6: confirmatory tests and headline lift without 202
 
 eval: mechanisms robustness  ## Phases 3-6: gate, out-of-sample lift, mechanism and robustness checks
 
-report:  ## Phase 7: figures and tables for the README and memo
-	@echo "report: not implemented yet (Phase 7)"; exit 1
+report: eval  ## Phase 7: the memo and the README results block, from saved outputs
+	$(RUN) python -m coorsfit.report > /dev/null
 
 all: setup data targets features models eval report  ## Rebuild everything from raw pulls
 

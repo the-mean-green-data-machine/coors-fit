@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 import pandas as pd  # noqa: E402
 
 from coorsfit.clean import to_markdown  # noqa: E402
-from coorsfit.config import ROOT, load_config  # noqa: E402
+from coorsfit.config import ROOT, data_path, load_config  # noqa: E402
 from coorsfit.evaluate import confirmatory, cross_predict, lift, modeling_table  # noqa: E402
 from coorsfit.evaluate_report import POINTS2, SCHEME_LABEL  # noqa: E402
 from coorsfit.features import CONFIRMATORY, build_features, load_inputs, trait_population  # noqa: E402
@@ -107,6 +107,9 @@ def figure(lifts: pd.DataFrame, coefs: pd.DataFrame) -> plt.Figure:
 
 def main() -> None:
     sizes, lifts, coefs = run()
+    P = data_path("processed")
+    for name, frame in (("sizes", sizes), ("lifts", lifts), ("coefs", coefs)):
+        frame.to_parquet(P / f"phase6_{name}.parquet", index=False)
     fig = figure(lifts, coefs)
     fig.savefig(ROOT / "reports" / "figures" / "phase6_robustness.png", dpi=160, facecolor=SURFACE)
 

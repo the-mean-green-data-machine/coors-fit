@@ -240,6 +240,8 @@ def main() -> None:
     checks = run_checks(rows)
     conf = confirmatory(visitors)["primary (A-3: with quality)"]
     v = verdicts(checks, conf)
+    checks.to_parquet(data_path("processed") / "phase5_checks.parquet", index=False)
+    v.to_parquet(data_path("processed") / "phase5_verdicts.parquet", index=False)
 
     fig = figure(checks)
     fig.savefig(ROOT / "reports" / "figures" / "phase5_mechanisms.png", dpi=160, facecolor=SURFACE)
