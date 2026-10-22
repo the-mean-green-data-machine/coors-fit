@@ -122,3 +122,18 @@ Evidence: DECISIONS.md, D-19 to D-21, and `reports/tables/targets_diagnostics.md
 ### A-2 · 2026-10-21 · Power confirmed from eligible counts
 
 There are 25,275 eligible visitor Coors PAs in 2016 to 2026. With the pre-registered per-PA SD of 0.514, the minimum detectable effect at 80% power is 9.1 wOBA points per trait SD at α = 0.05 and 11.1 at α = 0.01. This matches the planning estimate, so nothing else changes.
+
+### A-3 · 2026-10-21 · Control for hitter quality in the confirmatory fit and the models
+
+Logged after Phase 2 found that visitors' Coors residuals slope against their expected wOBA (−0.28 ± 0.12; DECISIONS.md, D-23), and before any trait was computed. Several traits track hitter quality, so without a control that slope could leak into their coefficients.
+
+- **The control, `quality`:** a hitter-season's mean expected wOBA over its Coors PAs, minus the PA-weighted mean of the same quantity among eligible hitter-seasons in its group and season.
+  - It comes from the same-season non-Coors expectation that already defines the residual, so it refines the expectation rather than adding a trait.
+  - It is not a hypothesis and is not standardized with the traits.
+- **Confirmatory fit:** the five confirmatory coefficients come from the PA-weighted least-squares fit with `quality` added as a control. The Holm correction and the bootstrap are unchanged.
+- **Models:** M1 includes `quality` alongside the traits. M2 uses the same features as M1, so it includes `quality` too.
+- **Baselines:**
+  - The headline comparison is M1 against **B0q**: the league-average Coors effect plus a slope on `quality`, both fit on the training fold. Any lift over B0q therefore comes from the traits, not from quality.
+  - The pre-registered B0 (league-average effect only) is reported as well, which shows how much the quality slope adds on its own.
+- **Sensitivity:** the uncontrolled versions (the confirmatory fit and M1 without `quality`, scored against B0) are reported as a sensitivity analysis.
+- **Gate:** unchanged. τ is estimated as registered; τ net of the quality slope is reported alongside it as supplementary.

@@ -169,3 +169,11 @@ Changed before pre-registration:
 - **Rockies hitters** show no gradient (−0.03 ± 0.20).
 - **Why it matters:** several traits correlate with hitter quality (fly-ball exit velocity, strikeout rate). Left alone, the gradient could bias their tests by about a third of the minimum detectable effect.
 - **Status:** a decision for the user before any trait is computed. It is not yet a pre-registration amendment.
+
+### D-24 · Quality control adopted (resolves D-23)
+- **Decision (user, 2026-10-21):** amend the pre-registration as A-3.
+  - The confirmatory fit, M1 and M2 control for each hitter-season's centered expected wOBA at Coors.
+  - The headline lift compares M1 with B0q, a baseline with the same quality slope fit on the training fold.
+  - The pre-registered B0 and the uncontrolled fits are reported as sensitivities.
+- **Why:** the gradient could otherwise be credited to traits that track hitter quality. Putting the same slope in the baseline means any lift comes from the traits alone.
+- **Committed** on its own, before any Phase 3 or Phase 4 code.
