@@ -84,3 +84,12 @@ def test_stored_traits_are_unchanged_without_coors_rows_or_future_seasons():
     rebuilt = build_features(pa[keep_pa], pitches[keep_pitch], stored[["batter", "season"]])
     pd.testing.assert_frame_equal(stored[rebuilt.columns], rebuilt, check_dtype=False)
     assert stored[TRAITS].notna().all().all()
+
+
+def test_a_trait_with_no_spread_standardizes_to_zero_not_nan():
+    pa, pitches = synthetic(n_batters=60)
+    pitches["delta_run_exp"] = 0.0  # every hitter identical against every pitch type
+    population = pd.DataFrame({"batter": range(60), "season": 2017})
+    feats = build_features(pa, pitches, population)
+    assert (feats["brk_deficit"] == 0).all()
+    assert feats[TRAITS].notna().all().all()

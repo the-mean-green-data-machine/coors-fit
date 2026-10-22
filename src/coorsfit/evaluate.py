@@ -37,15 +37,23 @@ COMPARISONS = [  # (model, baseline, role)
 ]
 
 
-def modeling_table(group: str) -> pd.DataFrame:
-    """Eligible hitter-seasons of one group with outcome, weights, quality, traits and noise."""
+def modeling_table(
+    group: str, features: pd.DataFrame | None = None, min_prior: int | None = None
+) -> pd.DataFrame:
+    """Eligible hitter-seasons of one group with outcome, weights, quality, traits and noise.
+
+    `features` and `min_prior` let the Phase 6 check swap in traits rebuilt for a stricter
+    population and keep only hitter-seasons that meet it.
+    """
     P = data_path("processed")
     t = pd.read_parquet(P / "targets.parquet")
     t = t[t["eligible"] & (t["group"] == group)]
+    if min_prior is not None:
+        t = t[t["n_noncoors_prior"] >= min_prior]
     cp = pd.read_parquet(P / "coors_pa.parquet").merge(t[TARGET_KEY], on=TARGET_KEY)
     cp["dev2"] = (cp["resid"] - cp.groupby(TARGET_KEY)["resid"].transform("mean")) ** 2
     ss = cp.groupby(TARGET_KEY)["dev2"].sum().rename("ss_within").reset_index()
-    feats = pd.read_parquet(P / "features.parquet")
+    feats = pd.read_parquet(P / "features.parquet") if features is None else features
     df = t.merge(ss, on=TARGET_KEY).merge(feats, on=["batter", "season"], how="left")
     assert df[TRAITS].notna().all().all(), "every eligible hitter-season needs traits"
     df = df.rename(columns={"mean_resid": "y", "n_coors": "n"})

@@ -4,7 +4,7 @@ Given only a hitter's non-Coors history, can we forecast how much more or less t
 
 This is a forecast scored on hitters the model never saw, not a leaderboard of who has hit well at Coors. The hypotheses and analysis plan were committed in [docs/hypotheses.md](docs/hypotheses.md) before any model was fit. A null result is a valid outcome.
 
-**Status:** Phases 0 to 5 of 7 are done. Main findings so far:
+**Status:** Phases 0 to 6 of 7 are done. Main findings, which hold without 2020 and with a 400-PA trait minimum:
 
 - **No stable Coors skill among visiting hitters.** Their true Coors effects differ by an SD of less than 27 wOBA points (upper 95% bound); the point estimate is zero.
 - **The traits do not reliably beat the baseline out of sample.**
@@ -14,7 +14,7 @@ This is a forecast scored on hitters the model never saw, not a leaderboard of w
   - **Fly-ball exit velocity (H3b)** has the predicted sign, but shows no Coors gain in home runs per fly ball or in distance, so it is flagged as likely noise.
   - **Breaking-ball deficit (H1)** has the *opposite* sign to the one registered, and the effect runs through fastball outcomes rather than breaking balls.
 
-See [Phase 5 mechanisms](reports/tables/phase5_mechanisms.md), [Phase 4 results](reports/tables/phase4_results.md), the [gate](reports/tables/gate.md), the [data summary](reports/tables/data_summary.md) and the [target diagnostics](reports/tables/targets_diagnostics.md).
+See [Phase 6 robustness](reports/tables/phase6_robustness.md), [Phase 5 mechanisms](reports/tables/phase5_mechanisms.md), [Phase 4 results](reports/tables/phase4_results.md), the [gate](reports/tables/gate.md), the [data summary](reports/tables/data_summary.md) and the [target diagnostics](reports/tables/targets_diagnostics.md).
 
 ## Rerun
 
@@ -41,7 +41,8 @@ Without uv: `python3.12 -m venv .venv && .venv/bin/pip install -r requirements.t
 
 ## Not done yet
 
-- Phases 6 and 7: robustness and write-up.
+- Phase 7: the memo and the final README.
+- A check that no single season drives the results (only the 2020 exclusion was run).
 - Mechanism check for H4, which is outside the minimum scope.
 - The pooled visitor-plus-Rockies model from the pre-registered secondary analysis (the transfer test is done).
 - Weather controls (DECISIONS.md, D-12).

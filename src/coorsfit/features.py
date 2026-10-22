@@ -162,21 +162,28 @@ def build_features(
             else:
                 shrunk = eb_shrink(f[trait], f[f"{trait}_var"])
             out.loc[idx, f"{trait}_raw"] = f[trait]
-            out.loc[idx, trait] = (shrunk - shrunk.mean()) / shrunk.std()
+            sd = shrunk.std()
+            # If shrinkage finds no real spread this season, everyone sits at the mean: z = 0.
+            out.loc[idx, trait] = (shrunk - shrunk.mean()) / sd if sd > 1e-12 else 0.0
         log.debug("season %s: %d hitters", season, len(idx))
     return out
 
 
-def trait_population(pa: pd.DataFrame) -> pd.DataFrame:
-    """Eligible hitters per target season: enough prior and same-season non-Coors PAs."""
+def trait_population(pa: pd.DataFrame, min_prior: int | None = None) -> pd.DataFrame:
+    """Eligible hitters per target season: enough prior and same-season non-Coors PAs.
+
+    `min_prior` overrides the configured prior-PA minimum (the Phase 6 sensitivity check).
+    """
     from coorsfit.targets import eligibility_counts  # avoid a cycle at import time
 
     cfg = load_config()
     counts = eligibility_counts(pa)
     first, last = cfg["seasons"]["targets"]
+    if min_prior is None:
+        min_prior = cfg["traits"]["min_prior_noncoors_pa"]
     keep = (
         counts["season"].between(first, last)
-        & (counts["n_noncoors_prior"] >= cfg["traits"]["min_prior_noncoors_pa"])
+        & (counts["n_noncoors_prior"] >= min_prior)
         & (counts["n_noncoors_same"] >= cfg["target"]["min_same_season_noncoors_pa"])
     )
     return counts[keep]

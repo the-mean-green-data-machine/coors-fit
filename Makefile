@@ -5,7 +5,7 @@ UV ?= uv
 RUN := $(UV) run --frozen
 
 .DEFAULT_GOAL := help
-.PHONY: help setup openmp data features targets gate models mechanisms eval report all test lint requirements
+.PHONY: help setup openmp data features targets gate models mechanisms robustness eval report all test lint requirements
 
 help:  ## List targets
 	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-13s %s\n", $$1, $$2}'
@@ -47,8 +47,10 @@ gate:  ## Phase 3: is there a stable Coors skill? (between-hitter SD with bootst
 mechanisms: models  ## Phase 5: mechanism checks for H1 to H3
 	$(RUN) python -m coorsfit.mechanisms > /dev/null
 
-eval: mechanisms  ## Phases 3-6: gate, out-of-sample lift, mechanism and robustness checks
-	@echo "eval: Phase 6 not implemented yet"; exit 1
+robustness: models  ## Phase 6: confirmatory tests and headline lift without 2020 and at a 400-PA trait minimum
+	$(RUN) python -m coorsfit.robustness > /dev/null
+
+eval: mechanisms robustness  ## Phases 3-6: gate, out-of-sample lift, mechanism and robustness checks
 
 report:  ## Phase 7: figures and tables for the README and memo
 	@echo "report: not implemented yet (Phase 7)"; exit 1

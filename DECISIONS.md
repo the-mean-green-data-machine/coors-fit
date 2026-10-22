@@ -310,3 +310,27 @@ Full tables are in `reports/tables/phase5_mechanisms.md`.
   - **No pre-registered trait counts as a finding.**
 - **Power caveat.** There are 4,419 Coors fly balls across 1,538 hitter-seasons. Interval widths are about ±1.6 pp for home runs per fly ball, ±3 ft for distance and ±21 points for wOBA over expected. Absence of mechanism evidence is not evidence of absence.
 - **Not interpreted: the quality coefficients in these regressions.** They are strongly negative, but partly mechanical. "Elsewhere" is the raw same-season mean, and `quality` comes from the same non-Coors data, so luck elsewhere moves both. Trait coefficients are not affected, because traits come from earlier seasons.
+
+## Phase 6: robustness (2026-10-21)
+
+### D-32 · A trait with no detectable spread standardizes to zero
+- **Decision:** if shrinkage finds no real spread in a trait for a season, so that every hitter shrinks to the same value, the standardized trait is 0 for everyone that season instead of undefined.
+- **Why:** this happened once, for `brk_deficit` in 2025 within the stricter 400-PA population. The registered 200-PA population never hits it; earlier reports were unchanged byte for byte after the change. A unit test covers it.
+
+### D-33 · Bootstrap seed sensitivity of the lift intervals
+- **Finding:** the percentile endpoints of the lift intervals move by about ±15 (wOBA points)² depending on the bootstrap seed, because a few batters dominate the squared-error differences. Over ten seeds, the lower bound for unseen hitters ranged from −43 to −30 and the upper bound from 336 to 360. All of those intervals include zero.
+- **Decision:** Phase 6 uses the same bootstrap stream as Phase 4, so the registered row reproduces Phase 4 exactly.
+
+### D-34 · Phase 6 results
+Full tables are in `reports/tables/phase6_robustness.md`.
+
+| Variant | Hitter-seasons | H1 `brk_deficit` | H3b `fb_ev` | Lift, unseen hitters | Lift, future seasons |
+|---|---:|---|---|---|---|
+| Registered | 1,877 | −9.6, Holm p 0.008 | +12.3, Holm p 0.040 | +154 (−48 to +352) | −12 (−329 to +301) |
+| Without 2020 | 1,819 | −9.3, Holm p 0.012 | +11.6, Holm p 0.074 (fails Holm) | +128 (−54 to +304) | −44 (−391 to +299) |
+| Trait minimum 400 PAs | 1,536 | −9.9, Holm p 0.028 | +14.9, Holm p 0.024 | +44 (−94 to +185) | −57 (−415 to +282) |
+
+- **The prediction null holds.** Every headline lift interval includes zero.
+- **H1's reversed sign is stable,** at −9.3 to −9.9 and surviving Holm in every variant. Phase 5 found it does not run through breaking balls.
+- **H3b's size is stable (+11.6 to +14.9), but its significance is fragile.** It fails Holm without 2020, which fits the Phase 5 "likely noise" flag.
+- **No conclusion changes.**
