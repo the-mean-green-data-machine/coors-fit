@@ -39,6 +39,12 @@ traits:
     fastball: [FF, SI, FC]
     breaking: [SL, ST, SV, CU, KC, CS]
 
+expectation:                # expected wOBA per PA, fit on same-season non-Coors PAs
+  max_iter: 100
+  tol: 1.0e-7
+  pitcher_batting_min_pitches: 200  # a player who threw this many pitches in a season...
+  pitcher_batting_max_pa: 100       # ...and batted fewer times is a pitcher batting
+
 target:
   min_same_season_noncoors_pa: 100
   min_coors_pa_display: 10  # per-hitter displays only; the model and scoring use every Coors PA

@@ -108,4 +108,17 @@ None of these is confirmatory.
 
 ## Amendments
 
-None yet.
+### A-1 · 2026-10-21 · The expectation model gains three adjustments
+
+Logged in Phase 2, before any trait was computed or compared with a Coors outcome. The target is unchanged: Coors wOBA minus the expected wOBA from same-season non-Coors data. Only the expectation model changes.
+
+- **A home/road term.** A visitor's non-Coors PAs include his home games, where every team hits a little better. Without this term, his expected level at Coors, where he is the road team, would be set too high.
+- **Park effects for non-Coors parks, shrunk toward zero.** A Coors PA is predicted at a park effect of zero, so the residual measures Coors against the average non-Coors park rather than against the hitter's own home park.
+- **Pitchers' own PAs are left out of the fit** (before 2022, about 5,000 per season). Their very low wOBA made regular hitters look more different from each other than they are, which led to too little shrinkage.
+- **Shrinkage accounts for PAs within a game sharing shocks,** such as a pitcher's bad day. It does this through a design effect estimated from game-to-game variation.
+
+Evidence: DECISIONS.md, D-19 to D-21, and `reports/tables/targets_diagnostics.md`.
+
+### A-2 · 2026-10-21 · Power confirmed from eligible counts
+
+There are 25,275 eligible visitor Coors PAs in 2016 to 2026. With the pre-registered per-PA SD of 0.514, the minimum detectable effect at 80% power is 9.1 wOBA points per trait SD at α = 0.05 and 11.1 at α = 0.01. This matches the planning estimate, so nothing else changes.

@@ -34,8 +34,9 @@ data:  ## Phase 1: pull Statcast (cached, resumable) and build the PA table
 features:  ## Phase 4: non-Coors traits from prior seasons
 	@echo "features: not implemented yet (Phase 4)"; exit 1
 
-targets:  ## Phase 2: hitter-season Coors residuals and shrinkage
-	@echo "targets: not implemented yet (Phase 2)"; exit 1
+targets:  ## Phase 2: hitter-season Coors residuals, shrinkage and diagnostics
+	$(RUN) python -m coorsfit.targets
+	$(RUN) python -m coorsfit.targets_report > /dev/null
 
 models:  ## Phase 4: baseline B0 and candidates M1, M2
 	@echo "models: not implemented yet (Phase 4)"; exit 1
@@ -46,7 +47,7 @@ eval:  ## Phases 3-6: gate, out-of-sample lift, mechanism and robustness checks
 report:  ## Phase 7: figures and tables for the README and memo
 	@echo "report: not implemented yet (Phase 7)"; exit 1
 
-all: setup data features targets models eval report  ## Rebuild everything from raw pulls
+all: setup data targets features models eval report  ## Rebuild everything from raw pulls
 
 test:  ## Run the test suite
 	$(RUN) pytest -q

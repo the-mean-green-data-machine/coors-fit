@@ -125,3 +125,47 @@ Changed before pre-registration:
 ### Observations from the data summary (no decision)
 - Visitors' wOBA at Coors exceeded visitors' road wOBA at other parks by between .017 (2021) and .075 (2025). A swing that large between seasons fits changes in Rockies pitching quality, which is why the Phase 2 expectation controls for the pitchers faced.
 - Visitors had 33,415 Coors wOBA PAs in the 2016–2026 target seasons, close to the 35,000 planning figure in `docs/hypotheses.md`. That count is before the eligibility thresholds.
+
+## Phase 2: outcome and target (2026-10-21)
+
+### D-19 · Expectation model
+- **Decision:** expected wOBA for a PA is the league mean plus effects for batter, pitcher, park, platoon cell (batter side × pitcher hand) and home/road.
+  - It is fit separately for each season on non-Coors wOBA PAs.
+  - Batter, pitcher and park effects are empirical-Bayes shrunk toward zero; platoon and home/road are estimated directly.
+  - It is fit by backfitting, converging in 18 to 42 iterations and about 0.1 s per season.
+  - A Coors PA gets a park effect of zero, so its residual compares Coors with the average non-Coors park.
+- **Why:**
+  - **Home/road term:** a visitor bats as the road team at Coors. The estimated home advantage is 0.006 to 0.018 wOBA depending on the season.
+  - **Park term:** a hitter's non-Coors level otherwise carries his home park's effect.
+  - **A leakage test** shows changing Coors outcomes never changes an expected value.
+- **Pre-registration:** this is amendment A-1 in `docs/hypotheses.md`.
+
+### D-20 · Shrinkage corrected for PAs within a game being correlated
+- **Decision:** before shrinking each term, inflate the noise variance by a design effect. It compares the spread of each batter's, pitcher's or park's per-game totals with what independent PAs would give.
+- **Why:**
+  - Out-of-sample checks (fit on odd games, score even games) showed the pitcher term under-shrunk, with coefficients of 0.55 to 0.75 against a calibrated 1.
+  - With the correction, the overall held-out slope averages 0.92 across seasons (from 0.69 in 2020 to 1.03), and the batter term averages about 1.07.
+  - The pitcher term is still somewhat over-dispersed (about 0.85).
+- **Effect on the targets:** small. For a hitter 40 points above average, an 8% overspread moves his expected value by about 3 points, against a minimum detectable effect of about 9. Pitcher miscalibration mostly shifts every visitor in a season together, and the season's Coors effect absorbs that.
+- **Considered:** estimating each term's spread from split halves. Not done: the current calibration is adequate for a target this noisy, and the time is better spent on Phases 3 and 4.
+
+### D-21 · Pitchers' own PAs left out of the expectation fit
+- **Decision:** a player who threw at least 200 pitches in a season and batted fewer than 100 times is treated as a pitcher batting. Those PAs are left out of the fit.
+- **Why:** before 2022 there were about 5,000 such PAs per season. Their very low wOBA inflated the estimated spread between batters, so regular hitters were shrunk too little; in a half-season test for 2019, the held-out slope rose from 0.77 to 0.80 once they were dropped. Two-way players who bat regularly are not affected (unit test). Fewer than 10 PAs per season are flagged from 2022 on.
+
+### D-22 · Hitter-season targets and their shrinkage
+- **Decision:** each hitter-season's deviation is measured from its group's Coors effect in that season, then shrunk with a spread between hitters estimated by method of moments.
+  - Groups are visitors and Rockies hitters.
+  - Using the season's effect keeps season-to-season swings, such as a better or worse Rockies staff, from counting as hitter skill.
+  - The league-average effect used for prediction is refit inside each Phase 4 training fold.
+- **Results:**
+  - **Visitors:** 1,877 eligible hitter-seasons, with a median of 12 Coors PAs each. The spread between hitters at the hitter-season level is estimated at zero, and 96.2% of hitter-seasons fall inside the band noise alone would produce. Every visitor hitter-season therefore shrinks to its season's effect. This is the situation D-09 anticipated; Phase 3 pools each hitter's seasons.
+  - **Rockies hitters:** 89 eligible hitter-seasons, with a median of 236 Coors PAs each. The spread between hitters is estimated at 0.027, and the median shrink factor is 0.36. Road-based baselines may inflate that spread (D-07).
+  - **Pooled Coors effect:** +0.041 for visitors and +0.056 for Rockies hitters. By season, visitors range from +0.012 (2021) to +0.065 (2025), with standard errors near 0.01.
+
+### D-23 · Open question for Phase 4: Coors residuals slope with hitter quality
+- **Finding:** among visitors, the Coors residual (net of the season effect) slopes against expected wOBA at −0.28 ± 0.12, clustered by batter. By quintile of expected wOBA it runs from +0.016 for the weakest to −0.009 for the strongest, but not monotonically.
+- **Comparison:** the expectation's own out-of-sample miscalibration would give about −0.08. The excess (about −0.20 ± 0.12) is roughly 1.7 standard errors.
+- **Rockies hitters** show no gradient (−0.03 ± 0.20).
+- **Why it matters:** several traits correlate with hitter quality (fly-ball exit velocity, strikeout rate). Left alone, the gradient could bias their tests by about a third of the minimum detectable effect.
+- **Status:** a decision for the user before any trait is computed. It is not yet a pre-registration amendment.

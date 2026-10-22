@@ -141,7 +141,7 @@ def season_summary(pa: pd.DataFrame, stats: dict) -> dict:
 
 def to_markdown(df: pd.DataFrame) -> str:
     def fmt(col: str, v: object) -> str:
-        if col == "season":
+        if col == "season" or isinstance(v, str | bool | np.bool_):
             return str(v)
         if isinstance(v, int | np.integer):
             return f"{v:,}"
