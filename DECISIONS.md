@@ -252,3 +252,23 @@ Full tables are in `reports/tables/phase4_results.md`.
 - **Exploratory, H5:** sprint speed is +10.6 (3.2 to 17.6). Being exploratory, it carries no confirmatory weight.
 - **Coverage:** held-out 50% intervals cover 51–52% and 90% intervals cover 92–94%.
 - **Rockies transfer:** calibration slope +0.45 (−0.21 to +1.24) across 45 hitters. Inconclusive.
+
+## Phase 5: mechanism checks (2026-10-21)
+
+### D-30 · How mechanism checks are scored (written and committed before running them)
+- **Design.**
+  - For each eligible visitor hitter-season, take the mechanism outcome at Coors minus the same hitter's outcome at other parks in the same season. Only his visiting PAs at Coors count.
+  - Regress that difference on the confirmatory specification: the five traits plus `quality`.
+  - Weight each hitter-season by the inverse variance of its difference, n_Coors · n_other / (n_Coors + n_other).
+  - Intervals come from 2,000 bootstrap draws over batters. There is no multiplicity correction, because the mechanism checks support the confirmatory tests rather than replace them.
+- **Outcomes** (minimum version: H1 to H3):
+  - **H1:** run value per 100 pitches against breaking balls, and the same against fastballs.
+  - **H2:** hit rate on in-park line drives and fly balls (home runs excluded), and home runs per PA.
+  - **H3a and H3b:** home runs per fly ball, fly-ball distance, and actual minus expected wOBA on fly balls.
+- **When a mechanism "agrees":**
+  - **H3a and H3b:** the trait's coefficient is positive, with a 95% interval above zero, for at least one of the three fly-ball outcomes, and none of them is significantly negative.
+  - **H2:** the coefficient of `ld_rate` on the in-park hit rate is positive with an interval above zero, and its coefficient on home runs per PA is not significantly positive.
+  - **H1 (registered +):** the coefficient of `brk_deficit` on breaking-ball run value is positive with an interval above zero, and larger than its coefficient on fastball run value.
+    - The confirmatory result has the opposite sign, so H1 is contradicted whatever this check shows.
+    - The check is still reported, to say whether the observed negative effect runs through breaking balls: a negative breaking-ball coefficient below the fastball coefficient.
+- **Verdict:** a trait is a finding only if it passed the confirmatory test (D-29) and its mechanism agrees. A trait that passed without mechanism evidence is flagged as likely noise.
