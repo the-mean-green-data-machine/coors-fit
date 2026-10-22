@@ -272,3 +272,41 @@ Full tables are in `reports/tables/phase4_results.md`.
     - The confirmatory result has the opposite sign, so H1 is contradicted whatever this check shows.
     - The check is still reported, to say whether the observed negative effect runs through breaking balls: a negative breaking-ball coefficient below the fastball coefficient.
 - **Verdict:** a trait is a finding only if it passed the confirmatory test (D-29) and its mechanism agrees. A trait that passed without mechanism evidence is flagged as likely noise.
+
+### D-31 · Phase 5 results
+Full tables are in `reports/tables/phase5_mechanisms.md`.
+
+- **Sanity check: the Coors effect on each outcome.** These are visitors at Coors minus the same hitters elsewhere, weighted averages:
+
+  | Outcome | Coors minus elsewhere |
+  |---|---|
+  | Fly-ball distance | +16.0 ft (consistent with the known ~5% carry boost) |
+  | Home runs per fly ball | +2.2 percentage points |
+  | wOBA minus expected wOBA on fly balls | +87 points |
+  | Hit rate on in-park line drives and fly balls | +5.9 percentage points |
+  | Home runs per PA | +0.36 percentage points |
+  | Run value against fastballs | +1.08 per 100 pitches |
+  | Run value against breaking balls | +0.38 per 100 pitches |
+
+- **Each hypothesis's own trait** (coefficient per trait SD, 95% interval):
+
+  | Hypothesis | Outcome | Estimate | 95% interval | Unit |
+  |---|---|---:|---|---|
+  | H3b (`fb_ev`) | Home runs per fly ball | +0.03 | −1.58 to +1.65 | pp |
+  | H3b (`fb_ev`) | Fly-ball distance | +0.6 | −2.4 to +3.5 | ft |
+  | H3b (`fb_ev`) | wOBA minus expected, fly balls | +13.4 | −7.5 to +34.8 | wOBA points |
+  | H3a (`fb_rate`) | Home runs per fly ball | −0.46 | −1.64 to +0.90 | pp |
+  | H3a (`fb_rate`) | Fly-ball distance | −0.5 | −2.7 to +1.8 | ft |
+  | H3a (`fb_rate`) | wOBA minus expected, fly balls | −2.0 | −21.1 to +17.8 | wOBA points |
+  | H2 (`ld_rate`) | In-park hit rate | −0.17 | −1.23 to +0.89 | pp |
+  | H2 (`ld_rate`) | Home runs per PA | −0.19 | −0.42 to +0.04 | pp |
+  | H1 (`brk_deficit`) | Run value, breaking balls | −0.12 | −0.41 to +0.15 | runs per 100 pitches |
+  | H1 (`brk_deficit`) | Run value, fastballs | −0.30 | −0.49 to −0.09 | runs per 100 pitches |
+
+- **Verdicts under D-30:**
+  - **H1:** contradicts the hypothesis. The observed negative effect runs through fastball outcomes rather than breaking balls, so it is not the flattened-break mechanism.
+  - **H2 and H3a:** not supported.
+  - **H3b:** flagged as **likely noise**. It passed the confirmatory test, but no fly-ball outcome shows the carry mechanism.
+  - **No pre-registered trait counts as a finding.**
+- **Power caveat.** There are 4,419 Coors fly balls across 1,538 hitter-seasons. Interval widths are about ±1.6 pp for home runs per fly ball, ±3 ft for distance and ±21 points for wOBA over expected. Absence of mechanism evidence is not evidence of absence.
+- **Not interpreted: the quality coefficients in these regressions.** They are strongly negative, but partly mechanical. "Elsewhere" is the raw same-season mean, and `quality` comes from the same non-Coors data, so luck elsewhere moves both. Trait coefficients are not affected, because traits come from earlier seasons.
