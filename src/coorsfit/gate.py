@@ -170,6 +170,7 @@ def main() -> None:
         ]
     )  # fmt: skip
     split = split_half(visitors)
+    rows.to_parquet(data_path("processed") / "gate.parquet", index=False)
 
     fig = figure(rows, split)
     fig.savefig(ROOT / "reports" / "figures" / "phase3_gate.png", dpi=160, facecolor=SURFACE)

@@ -201,3 +201,54 @@ Changed before pre-registration:
 - **What it means for Phase 4:**
   - A perfect forecast of each hitter's true effect could cut the per-PA squared error by at most τ², which is at most 0.0007, about 0.2% of the per-PA variance of 0.30.
   - The data cannot rule out an SD of up to 27 points, so trait effects remain testable. Phase 4 runs as pre-registered.
+
+## Phase 4: prediction and evaluation (2026-10-21)
+
+### D-27 · Trait construction
+- **Definitions.** All traits use non-Coors data from the two seasons before the target season:
+  - **K rate:** strikeouts per PA, excluding truncated PAs.
+  - **Line-drive and fly-ball rates:** per batted ball with a type. Pop-ups count in the denominator but not as fly balls.
+  - **Fly-ball exit velocity:** the mean over fly balls with a measured exit velocity.
+  - **`brk_deficit`:** run value per 100 pitches against FF, SI and FC, minus against SL, ST, SV, CU, KC and CS.
+  - **Sprint speed:** the most recent season in the window with at least 10 competitive runs. It is not shrunk, because it is a measurement rather than a noisy rate. It is available for every eligible hitter-season.
+- **Shrinkage and scaling.** Each target season is handled separately. Each trait is shrunk toward the mean of that season's population by the share of spread that is not sampling noise, then standardized within the season. The population is eligible hitters (at least 200 prior and 100 same-season non-Coors PAs): 3,539 hitter-seasons in all.
+- **A leak the tests caught.** League rates and pooled within-batter variances were at first computed across every target season's window at once, so later seasons touched an earlier season's shrinkage (traits moved by about 0.1%). They are now computed per target season. The leakage tests on synthetic data and the rebuild of real 2022 traits now pass: changing Coors rows, the target season or later seasons leaves the traits unchanged.
+
+### D-28 · Model details
+- **Fitting.** Weighted least squares on hitter-seasons (weight = Coors PAs) equals least squares on PAs; a unit test checks this.
+- **M1.** Ridge penalizes only the traits. The penalty is chosen by five-fold CV grouped by batter inside each training set; the chosen values were 1,000 to 10,000, median 3,000.
+- **M2.** LightGBM is untuned: 300 trees, learning rate 0.02, 7 leaves, at least 50 rows per leaf.
+- **Not done.** The pooled visitor-plus-Rockies model from the pre-registered secondary analysis was not built. It is listed under "Not done yet".
+
+### D-29 · Phase 4 results
+Full tables are in `reports/tables/phase4_results.md`.
+
+- **Out-of-sample lift (headline):** M1 vs B0q, in (wOBA points)² per PA, with a ceiling of 704.
+
+  | Scheme | Lift | 95% interval | RMSE ratio | Share of ceiling |
+  |---|---:|---|---:|---:|
+  | Grouped CV (unseen hitters) | +154 | −48 to +352 | 0.99974 | 22% |
+  | Rolling origin (future seasons) | −12 | −329 to +301 | — | — |
+
+  Both intervals include zero.
+- **The other comparisons do not help either:**
+  - **M2 does worse than B0q:** −368 (−745 to +1) under grouped CV and −700 (−1,255 to −163) under rolling origin. The boosted model overfits noise.
+  - **B0q vs B0:** −34 and −31. The quality slope alone does not improve forecasts.
+  - **M1u vs B0:** +99 and +30, both with intervals that include zero.
+- **Confirmatory tests** (primary specification, n = 1,877 hitter-seasons, wOBA points per trait SD):
+
+  | Hypothesis | Trait | Estimate | 95% interval | Holm p | Reading |
+  |---|---|---:|---|---:|---|
+  | H1 | `brk_deficit` | −9.6 | −15.6 to −3.4 | 0.008 | Wrong sign, so it contradicts H1 as registered |
+  | H2 | `ld_rate` | −3.6 | −10.3 to +3.1 | — | Null |
+  | H3a | `fb_rate` | +1.8 | −4.2 to +8.2 | — | Null |
+  | H3b | `fb_ev` | +12.3 | +2.8 to +21.6 | 0.040 | Predicted sign and survives Holm; a finding only if the Phase 5 mechanism check agrees |
+  | H4 | `k_rate` | −2.2 | −11.3 to +6.7 | — | Null |
+
+  - The intercept, the visitors' Coors effect, is +40.5 (33.6 to 46.9).
+  - The quality coefficient is −360 (−705 to −15) per unit of expected wOBA.
+- **H1 runs opposite to the direction I proposed.** Hitters who are relatively weaker against breaking balls gain *less* at Coors. The original plan's wording ("hitters who handle breaking pitches well gain more") matches that sign. It cannot be claimed as confirmatory now, because the registered direction was the reverse. It is reported as contradicting H1, and the reversal is noted for future work.
+- **H3b depends on the quality control.** Without quality (sensitivity), H3b is +8.1 (−0.3 to +16.7), Holm p = 0.26, and does not survive. H1 survives either way.
+- **Exploratory, H5:** sprint speed is +10.6 (3.2 to 17.6). Being exploratory, it carries no confirmatory weight.
+- **Coverage:** held-out 50% intervals cover 51–52% and 90% intervals cover 92–94%.
+- **Rockies transfer:** calibration slope +0.45 (−0.21 to +1.24) across 45 hitters. Inconclusive.

@@ -31,21 +31,21 @@ data:  ## Phase 1: pull Statcast (cached, resumable) and build the PA table
 	$(RUN) python -m coorsfit.ingest
 	$(RUN) python -m coorsfit.clean
 
-features:  ## Phase 4: non-Coors traits from prior seasons
-	@echo "features: not implemented yet (Phase 4)"; exit 1
+features:  ## Phase 4: non-Coors traits from prior seasons (leakage-safe)
+	$(RUN) python -m coorsfit.features
 
 targets:  ## Phase 2: hitter-season Coors residuals, shrinkage and diagnostics
 	$(RUN) python -m coorsfit.targets
 	$(RUN) python -m coorsfit.targets_report > /dev/null
 
-models:  ## Phase 4: baseline B0 and candidates M1, M2
-	@echo "models: not implemented yet (Phase 4)"; exit 1
+models: gate  ## Phase 4: B0, B0q, M1, M2; out-of-sample lift, confirmatory tests, transfer test
+	$(RUN) python -m coorsfit.evaluate > /dev/null
 
 gate:  ## Phase 3: is there a stable Coors skill? (between-hitter SD with bootstrap)
 	$(RUN) python -m coorsfit.gate > /dev/null
 
-eval: gate  ## Phases 3-6: gate, out-of-sample lift, mechanism and robustness checks
-	@echo "eval: Phases 4-6 not implemented yet"; exit 1
+eval: models  ## Phases 3-6: gate, out-of-sample lift, mechanism and robustness checks
+	@echo "eval: Phases 5-6 not implemented yet"; exit 1
 
 report:  ## Phase 7: figures and tables for the README and memo
 	@echo "report: not implemented yet (Phase 7)"; exit 1

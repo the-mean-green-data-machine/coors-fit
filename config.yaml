@@ -35,6 +35,7 @@ traits:
   window_seasons: 2         # pool non-Coors PAs from the two seasons before the target season
   min_prior_noncoors_pa: 200
   sensitivity_min_prior_noncoors_pa: 400
+  sprint_min_runs: 10       # Savant's qualifying competitive runs for a sprint-speed season
   pitch_groups:             # Savant pitch_type codes
     fastball: [FF, SI, FC]
     breaking: [SL, ST, SV, CU, KC, CS]
@@ -48,6 +49,18 @@ expectation:                # expected wOBA per PA, fit on same-season non-Coors
 target:
   min_same_season_noncoors_pa: 100
   min_coors_pa_display: 10  # per-hitter displays only; the model and scoring use every Coors PA
+
+models:
+  ridge_alphas: [0, 30, 100, 300, 1000, 3000, 10000, 30000, 100000, 1000000]
+  inner_folds: 5             # grouped by batter, inside each training set, to pick the ridge penalty
+  lgbm:                      # M2: kept small on purpose
+    n_estimators: 300
+    learning_rate: 0.02
+    num_leaves: 7
+    min_child_samples: 50
+    subsample: 0.8
+    subsample_freq: 1
+    reg_lambda: 1.0
 
 validation:
   grouped_cv_folds: 5
